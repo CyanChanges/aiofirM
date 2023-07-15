@@ -1,0 +1,4 @@
+aiohttp~=3.8.4
+loguru~=0.7.0
+yarl~=1.9.2
+beautifulsoup4~=4.12.2
