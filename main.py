@@ -11,12 +11,13 @@ from typing import Any
 from bs4 import BeautifulSoup
 
 headers = {
-    "Connection": 'close'
+    "Connection": 'close',
+    "X-Forwarded-For": '8.8.8.8'
 }
 
 
-async def fire_once(url: str | URL, data: Any = os.urandom(114514), connector: TCPConnector = None):
-    async with ClientSession(url, connector=connector, headers=headers) as session:
+async def fire_once(url: str | URL, data: Any = os.urandom(114514), proxy: str=None):
+    async with ClientSession(url, proxy=proxy if proxy else {}, headers=headers) as session:
         try:
             async with session.get(f'/?{str(data)}') as req:
                 _ = await req.read()
@@ -26,9 +27,9 @@ async def fire_once(url: str | URL, data: Any = os.urandom(114514), connector: T
             pass
 
 
-async def fire_twice_mfss(session: ClientSession, url: str | URL, data: Any = os.urandom(114514)):
+async def fire_twice_mfss(session: ClientSession, url: str | URL, data: Any = os.urandom(114514), proxy: str=None):
     try:
-        async with session.get(f'/{url.removeprefix("/")}?{str(data)}') as req1:
+        async with session.get(f'/{url.removeprefix("/")}?{str(data)}', proxy=proxy) as req1:
             logger.debug("Connected to {}:{}", req1.status, req1.url)
             while not (req1.closed or req1.content.is_eof()):
                 b_data = await req1.content.read(114514)
@@ -72,7 +73,8 @@ async def main():
                     fire_twice_mfss(
                         session,
                         prefixes[i % len(prefixes)],
-                        data1
+                        data1,
+                        "http://localhost:20171"
                     )
                 )
 
